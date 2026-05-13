@@ -226,12 +226,12 @@ python tools/verify_depth.py --distances 100 200 300 400 500
 python tools/test_subsystem.py all --show
 
 # Or individually:
-python tools/test_subsystem.py cameras           # opens all 3 cameras
-python tools/test_subsystem.py detection --show  # live detection overlay
-python tools/test_subsystem.py seg       --show  # segmentation + cut point
-python tools/test_subsystem.py depth     --show  # disparity map display
-python tools/test_subsystem.py coords            # fake coord logging test
-python tools/test_subsystem.py stm32    --dry-run# STM32 command test
+python tools/test_subsystem.py cameras            # opens all 3 cameras
+python tools/test_subsystem.py detection --show   # live detection overlay
+python tools/test_subsystem.py seg       --show   # segmentation + cut point
+python tools/test_subsystem.py depth     --show   # disparity map display
+python tools/test_subsystem.py coords             # fake coord logging test
+python tools/test_subsystem.py stm32    --dry-run # STM32 command test
 ```
 
 ### Step 8 — Start the robot
