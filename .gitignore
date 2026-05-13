@@ -1,0 +1,58 @@
+# =============================================================================
+# ViniBot .gitignore
+# =============================================================================
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Python ────────────────────────────────────────────────────────────────────
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# ── Runtime logs & outputs ────────────────────────────────────────────────────
+logs/
+*.jsonl
+*.csv
+
+# ── Calibration data (machine-specific, regenerated on-device) ────────────────
+calibration/stereo_calib.npz
+
+# ── Model weights (large binaries — distribute via GitHub Releases or LFS) ────
+# NCNN models (compiled binaries — too large / not text-reviewable)
+weights/det_ncnn_model/
+weights/seg_ncnn_model/
+weights/det/best_ncnn_model/
+weights/seg/best_ncnn_model/
+weights/*.zip
+
+# PyTorch .pt weights (host on GitHub Releases)
+weights/det/best.pt
+weights/seg/best.pt
+
+# ── Ad-hoc test images (root-level) ───────────────────────────────────────────
+test*.jpg
+test*.png
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Environment (not used here, but safe to include) ──────────────────────────
+.env
+.env.local

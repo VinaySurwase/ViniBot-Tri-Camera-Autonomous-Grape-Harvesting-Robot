@@ -1,0 +1,151 @@
+# =============================================================================
+# GrapeBot v2 — Master Configuration
+# /home/phoenix/bot/config/config.yaml
+# =============================================================================
+
+# ── Camera assignment ─────────────────────────────────────────────────────────
+cameras:
+  # Pi Camera V3 — LEFT stereo (detection)
+  stereo_left:
+    type: picamera2
+    index: 0                    # Picamera2 camera index
+    width: 1280
+    height: 720
+    fps: 30
+    warmup_frames: 30
+    role: stereo_left
+
+  # Pi Camera V3 — RIGHT stereo (detection)
+  stereo_right:
+    type: picamera2
+    index: 1
+    width: 1280
+    height: 720
+    fps: 30
+    warmup_frames: 30
+    role: stereo_right
+
+  # USB Camera — segmentation / cutting point
+  usb_seg:
+    type: opencv
+    index: "/dev/v4l/by-id/usb-Generic_USB2.0_PC_CAMERA-video-index0"
+    width: 1280
+    height: 720
+    fps: 30
+    warmup_frames: 5
+    role: segmentation
+
+# ── Detection (YOLO primary → OpenCV fallback) ────────────────────────────────
+detection:
+  # HSV — Sharad Seedless (purple-green, tweak under actual vineyard lighting)
+  hsv_lower: [100, 50, 50]
+  hsv_upper: [140, 255, 255]
+  morph_kernel_size: 5
+  min_contour_area: 300
+
+  # HoughCircles
+  hough_dp: 1.2
+  hough_min_dist: 30
+  hough_param1: 50
+  hough_param2: 30
+  min_circle_radius: 8
+  max_circle_radius: 60
+
+  # Clustering
+  cluster_eps: 80
+  min_circles_for_cluster: 2
+  min_cluster_confidence: 0.55
+  frames_to_confirm: 3          # N consecutive detections before confirming POI
+
+  # False-positive / retry handling
+  max_detection_retries: 5      # give up on current POI after N failed seg attempts
+  fp_iou_threshold: 0.3         # if new detection overlaps old FP zone → skip
+
+  # YOLO NCNN (primary detector)
+  yolo_model_path: "weights/det_ncnn_model"
+  yolo_conf_thres: 0.25
+  yolo_iou_thres: 0.45
+  yolo_imgsz: 640
+
+  # OpenCV HSV+HoughCircles fallback
+  fallback_to_opencv: true
+
+# ── Segmentation (USB cam, NCNN) ──────────────────────────────────────────────
+segmentation:
+  model_path: "weights/seg_ncnn_model"
+  conf_thres: 0.15
+  imgsz: 480
+  mask_threshold: 0.3
+  blur_kernel: 5
+  dilate_iterations: 1
+  cutting_point_method: "topmost"   # topmost | centroid | midpoint
+  min_stem_area_px: 50
+
+  # False-positive stem handling
+  max_stem_retries: 3           # retry segmentation on a single stem N times
+  min_stem_consistency: 2       # stem must appear in N consecutive frames to be valid
+  false_positive_zones: []      # runtime list of (x1,y1,x2,y2) zones to ignore
+
+# ── Stereo depth ──────────────────────────────────────────────────────────────
+depth:
+  calibration_file: "calibration/stereo_calib.npz"
+  baseline_mm: 60.0
+  focal_length_px: 940.0          # Pi Camera V3 (IMX708): 4.74mm lens / 6.45mm sensor × 1280px
+  max_depth_mm: 2000
+  min_depth_mm: 50
+  depth_window_px: 21             # robust local disparity window around target pixel
+  min_valid_disp_px: 50           # minimum valid disparity pixels required in window
+  enabled: true
+
+# ── ESP32 chassis motor controller ───────────────────────────────────────────
+esp32:
+  # UART serial: Pi TX (GPIO14, Pin8) → ESP32 RX2 (GPIO16)
+  #              Pi RX (GPIO15, Pin10) ← ESP32 TX2 (GPIO17)
+  # Enable second UART on RPi5: add "dtoverlay=uart2" to /boot/firmware/config.txt
+  serial_port: "/dev/ttyAMA0"     # Changed for USB connection (was /dev/ttyAMA0)
+  serial_baud: 115200
+  command_timeout_ms: 500
+  obstacle_stop_mm: 200           # ESP32 auto-stops if front sensor < this value
+  dry_run: false
+
+# ── STM32 arm & cutter controller (chassis movement removed — ESP32 handles it)
+# ─────────────────────────────────────────────────────────────────────────────
+stm32:
+  # UART serial only
+  # Pi hardware UART: /dev/ttyAMA0  (primary UART, enabled via raspi-config)
+  serial_port: "/dev/ttyUSB0"
+  serial_baud: 115200
+  command_timeout_ms: 500       # ms to wait for ACK from STM32
+  char_delay_ms: 50             # per-character delay for coord send (uart_send.py uses 500)
+  warmup_s: 2.0                 # seconds to wait after opening port (STM32 settle time)
+  cam_height_from_ref_mm: 390.0  # camera centre is 390mm above arm's zero reference
+  arm_max_mm: 325.0              # arm travel range: 0 to 325mm (cannot go below 0)
+  dry_run: false                # true = log commands but never send
+
+# ── Android app WebSocket server ──────────────────────────────────────────────
+websocket:
+  host: "0.0.0.0"
+  port: 8765
+  ping_interval: 5
+  ping_timeout: 10
+
+# ── State machine ─────────────────────────────────────────────────────────────
+state_machine:
+  detect_loop_hz: 15
+  seg_loop_hz: 10
+  drive_speed: 50		            # PWM speed for chassis forward (0-255) in AUTO mode
+  auto_mode: false              # overridden by Android signal at runtime
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  log_dir: "logs"
+  console_level: "INFO"         # DEBUG | INFO | WARNING | ERROR
+  file_level: "DEBUG"
+  save_frames: true
+  det_frame_interval: 5
+  seg_save_every: true
+  max_log_runs: 30
+
+  # Coordinate debug — logs every coordinate sent to arm / cutting point
+  coord_debug: true
+  coord_log_file: "logs/coords.jsonl"

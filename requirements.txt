@@ -1,0 +1,22 @@
+# GrapeBot v2 — Pi dependencies
+# Install: pip install -r requirements.txt --break-system-packages
+
+# Camera
+picamera2>=0.3.12
+
+# Vision
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# WebSocket server (Android comms)
+websockets>=12.0
+
+# Config
+pyyaml>=6.0
+
+# Serial (ESP32)
+pyserial>=3.5
+
+# Logging
+colorama>=0.4.6
